@@ -84,6 +84,8 @@ private:
 
     void removeTwoChildren(TreeNode *to_remove);
 
+    TreeNode *getNextInOrder(TreeNode *node);
+
 public:
     AvlTree();                                    //c'tor
     AvlTree(const AvlTree &) = delete;            //copy c'tor
@@ -251,10 +253,8 @@ void AvlTree<T>::removeOneChild(AvlTree<T>::TreeNode *to_remove)
 template <class T>
 void AvlTree<T>::removeTwoChildren(AvlTree<T>::TreeNode *to_remove)
 {
-    /*get the next in order node of to_remove*/
-    AvlTree<T>::iterator it(this->root, to_remove);
-    ++it;
-    AvlTree<T>::TreeNode *next_in_order = it.curr_node;//!bug fix
+    /*get the next in order node of to_remove, there has to be one because to_remove has a right child*/
+    AvlTree<T>::TreeNode *next_in_order = getNextInOrder(to_remove);
 
     /*swap the to_remove and next_in_order*/
     to_remove->setKey(next_in_order->getKey());
@@ -268,6 +268,35 @@ void AvlTree<T>::removeTwoChildren(AvlTree<T>::TreeNode *to_remove)
     {
         removeOneChild(next_in_order);
     }
+}
+
+template <class T>
+typename AvlTree<T>::TreeNode *AvlTree<T>::getNextInOrder(AvlTree<T>::TreeNode *node)
+{
+    /*if the current node's right son isn't null the next in order is one to the right and then all the way to the left*/
+    if (node->getRightSon() != nullptr)
+    {
+        /*go one right*/
+        node = node->getRightSon();
+        /*go all the way right*/
+        while (node->getLeftSon() != nullptr)
+        {
+            node = node->getLeftSon();
+        }
+    }
+    /*if current node's right son is null, next in order is up until we reach a parent who's left son is the previous node*/
+    else
+    {
+        /* go up until the current node is his parent's left child*/
+        AvlTree<T>::TreeNode *parent = node->getParent();
+        while (parent != nullptr && parent->getRightSon() == node)
+        {
+            node = parent;
+            parent = parent->getParent();
+        }
+        node = parent;
+    }
+    return node;
 }
 
 template <class T>
@@ -743,7 +772,7 @@ public:
     int getKey();
     void setKey(int new_key);
     T &getVal();
-    void setVal(T& new_val);
+    void setVal(T &new_val);
     int getRank();
     void setRank(int new_rank);
     int getHeight();
@@ -779,8 +808,8 @@ T &AvlTree<T>::TreeNode::getVal()
     return this->val;
 }
 
-template<class T>
-void AvlTree<T>::TreeNode::setVal(T& new_val)
+template <class T>
+void AvlTree<T>::TreeNode::setVal(T &new_val)
 {
     this->val = new_val;
 }
@@ -887,20 +916,21 @@ T &AvlTree<T>::iterator::operator*()
 }
 
 template <class T>
-typename AvlTree<T>::iterator &AvlTree<T>::iterator::operator++()
+typename AvlTree<T>::iterator &AvlTree<T>::iterator::operator++()//todo use nextInOrder function to reduce code duplication
 {
     /*if iterator is already at the end do nothing*/
     if (this->curr_node == nullptr && this->root == nullptr)
     {
         return *this;
     }
+
     /*if the current node's right son isn't null the next in order is one to the right and then all the way to the left*/
     if (this->curr_node->getRightSon() != nullptr)
     {
         /*go one right*/
-        curr_node = curr_node->getRightSon();
+        this->curr_node = this->curr_node->getRightSon();
         /*go all the way right*/
-        while (curr_node->getLeftSon() != nullptr)
+        while (this->curr_node->getLeftSon() != nullptr)
         {
             curr_node = curr_node->getLeftSon();
         }
@@ -909,16 +939,15 @@ typename AvlTree<T>::iterator &AvlTree<T>::iterator::operator++()
     else
     {
         /* go up until the current node is his parent's left child*/
-        AvlTree<T>::TreeNode *parent = curr_node->getParent();
+        AvlTree<T>::TreeNode *parent = this->curr_node->getParent();
         while (parent != nullptr && parent->getRightSon() == curr_node)
         {
             curr_node = parent;
             parent = parent->getParent();
         }
         this->curr_node = parent;
-
-        return *this;
     }
+    return *this;
 }
 
 template <class T>
