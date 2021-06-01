@@ -70,13 +70,16 @@ private:
     void rightLeftRoll(TreeNode *node);
     //todo update ranks in all of rolls
 
+    void deleteTree(TreeNode* node);
+
 public:
     AvlTree();                                    //c'tor
     AvlTree(const AvlTree &) = delete;            //copy c'tor
     AvlTree &operator=(const AvlTree &) = delete; //assignment operator
-    ~AvlTree();                                   //d'tor//todo implement
+    ~AvlTree();                                   //d'tor
     void add(int key, T &val);
     void remove(int key); //todo implement
+    bool find(int key);
     //friend std::ostream &operator<< (std::ostream &os, const AvlTree<T> &tree);
     class iterator; 
     iterator begin() const { return iterator(this->root,this->root); }
@@ -90,7 +93,21 @@ AvlTree<T>::AvlTree() : root(nullptr) {}
 template <class T>
 AvlTree<T>::~AvlTree()
 {
-    //todo implement
+    deleteTree(this->root);
+}
+
+template <class T>
+void AvlTree<T>::deleteTree(AvlTree<T>::TreeNode* node)
+{
+    if(node==nullptr)
+    {
+        return;
+    }
+    AvlTree<T>::TreeNode* left = node->getLeftSon();
+    AvlTree<T>::TreeNode* right = node->getRightSon();
+    delete node;
+    deleteTree(left);
+    deleteTree(right);
 }
 
 /**
